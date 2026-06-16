@@ -1,4 +1,6 @@
 package OnlineBankingSystem;
 
-public class AccountStatus {
+enum AccountStatus {
+    ACTIVE,
+    DORMANT
 }

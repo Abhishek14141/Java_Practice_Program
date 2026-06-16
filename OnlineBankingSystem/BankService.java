@@ -1,61 +1,78 @@
 package OnlineBankingSystem;
 
-import javax.security.auth.login.AccountNotFoundException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BankChoice {
+public class BankService {
 
     private List<Account> accounts= new ArrayList<>();
 
-    public void createSavingAccount(int accNo, String accName, double balance){
-        if(balance<1000)
-            System.out.println("Minimum balance");
-
-
-        accounts.add(new SavingAccount(accNo,accName,balance));
+    public void createAccount(Account acc){
+        accounts.add(acc);
     }
 
-    public void createCurrentAccount(int accNo, String accName, double balance) {
-        accounts.add(new CurrentAccount(accNo, accName, balance));
-    }
-
-    private Account findAccount(int accNo)throws AccountNotFoundException {
+    private Account findAccount(long accNo) {
         for (Account acc : accounts) {
-            if (acc.getAccountNumber() == accNo)
+            if (acc.getAccNo() == accNo)
                 return acc;
-
-
         }
-        throw new AccountNotFoundException("Account not found: " +accNo);
+        throw new AccountNotFoundException("Account Not Found " +accNo);
     }
 
-    public void deposite(int accNo, double amount) throws AccountNotFoundException {
+    private void updateDormantStatus(Account acc){
+        if(acc.getLastTransactionDate().plusDays(15).isBefore(LocalDate.now())){
+            acc.setStatus(AccountStatus.DORMANT);
+        }
+    }
+
+    public void depositeMoney(long accNo, double amount)  {
         Account acc = findAccount(accNo);
-        acc.deposite(amount);
+        updateDormantStatus(acc);
+
+        acc.setBalance(acc.getBalance()+amount);
+        acc.setLastTransactionDate(LocalDate.now());
+        acc.setStatus(AccountStatus.ACTIVE);
     }
 
-    public void withdraw(int accNo, double amount) throws AccountNotFoundException {
-        Account acc= findAccount(accNo);
-        acc.withdraw(amount);
+    public boolean withdrawMoney(long accNo, double amount) {
+        Account acc = findAccount(accNo);
+        updateDormantStatus(acc);
+
+        if (acc.getStatus() == AccountStatus.DORMANT)
+            throw new DormantAccountException("Dormant account - only deposit allowed");
+
+        if (acc.getBalance() - amount < acc.getMinBalance()) {
+            System.out.println("Insufficient balance");
+            return false;
+        }
+
+        acc.setBalance(acc.getBalance() - amount);
+        acc.setLastTransactionDate(LocalDate.now());
+        return true;
     }
 
-    public void transfer(int fromAcc,int toAcc, double amount) throws AccountNotFoundException {
-        Account from = findAccount(fromAcc);
-        Account to = findAccount(toAcc);
+    public boolean transferMoney(long fromAcc, long toAcc, double amount) {
+        boolean withdrawn = withdrawMoney(fromAcc, amount);
 
-        from.withdraw(amount);
-        to.deposite(amount);
+        if (!withdrawn) {
+            System.out.println("Transfer Failed");
+            return false;
+        }
+
+        depositeMoney(toAcc, amount);
+        System.out.println("Transfer Successful");
+        return true;
     }
 
-    public void viewAccount(int accNo) throws AccountNotFoundException {
+    public void viewAccount(long accNo)  {
         Account acc= findAccount(accNo);
         acc.display();
     }
 
     public void monthlyStatement(){
         for(Account acc: accounts){
-            acc.calculateInterest();
+            acc.setBalance(acc.getBalance()+acc.getBalance()*acc.getInterestRate()/100);
             acc.display();
             System.out.println("----");
         }

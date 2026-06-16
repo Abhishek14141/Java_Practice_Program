@@ -2,7 +2,7 @@ package OnlineBankingSystem;
 
 import java.util.Scanner;
 
-public class BankApp {
+public class BankSystemMain {
 
     public static void main(String[] args) {
 
@@ -68,7 +68,7 @@ public class BankApp {
                         System.out.print("Enter Amount to Deposit: ");
                         double dAmt = sc.nextDouble();
 
-                        service.deposite(dAcc, dAmt);
+                        service.depositeMoney(dAcc, dAmt);
                         System.out.println("Amount Deposited Successfully");
                         break;
 
@@ -81,7 +81,7 @@ public class BankApp {
                         System.out.print("Enter Amount to Withdraw: ");
                         double wAmt = sc.nextDouble();
 
-                        boolean success = service.withdraw(wAcc, wAmt);
+                        boolean success = service.withdrawMoney(wAcc, wAmt);
                         if (success)
                             System.out.println("Withdrawal Successful");
 
@@ -97,7 +97,7 @@ public class BankApp {
                         System.out.print("Enter Amount: ");
                         double tAmt = sc.nextDouble();
 
-                        service.transfer(fromAcc, toAcc, tAmt);
+                        service.transferMoney(fromAcc, toAcc, tAmt);
 
 
                     case 5:
@@ -123,10 +123,11 @@ public class BankApp {
                         System.out.println("Invalid Choice! Please try again.");
                 }
 
-            } catch (DormantAccountException e) {
-                System.out.println("" + e.getMessage());
-            } catch (Exception e) {
+            } catch (AccountNotFoundException e) {
                 System.out.println("Error: " + e.getMessage());
+            }
+            catch (DormantAccountException e) {
+                System.out.println("" + e.getMessage());
             }
 
         } while (choice != 7);
